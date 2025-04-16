@@ -1,32 +1,48 @@
 <?php
 
-// Старый класс с устаревшим API
-class OldClass {
-    public function oldMethod() {
-        return 'Это старый метод';
+// Интерфейс DataSource
+interface DataSource {
+    public function readData(): string;
+}
+
+// Источник данных из файла
+class FileDataSource implements DataSource {
+    private $filePath;
+
+    public function __construct(string $filePath) {
+        $this->filePath = $filePath;
+    }
+
+    public function readData(): string {
+        if (!file_exists($this->filePath)) {
+            throw new Exception('Файл не найден');
+        }
+        return file_get_contents($this->filePath);
     }
 }
 
-// Новый класс с обновленным API
-class NewClass {
-    public function newMethod() {
-        return 'Это новый метод';
+// Источник данных из базы данных (эмуляция)
+class DatabaseDataSource {
+    private $connectionString;
+
+    public function __construct(string $connectionString) {
+        $this->connectionString = $connectionString;
+    }
+
+    public function fetchData(): string {
+        return "Получены данные из базы данных с соединением {$this->connectionString}";
     }
 }
 
-class AdapterMethod extends OldClass {
-    private $newObject;
-    
-    public function __construct(NewClass $newObj) {
-        $this->newObject = $newObj;
+// Адаптер для интеграции DatabaseDataSource в интерфейс DataSource
+class DatabaseAdapter implements DataSource {
+    private $dbSource;
+
+    public function __construct(DatabaseDataSource $dbSource) {
+        $this->dbSource = $dbSource;
     }
-    
-    public function oldMethod() {
-        return $this->newObject->newMethod();
+
+    public function readData(): string {
+        return $this->dbSource->fetchData();
     }
 }
-
-$newInstance = new NewClass();     // Создаем экземпляр нового класса
-$adapter = new AdapterMethod($newInstance);   // Создаем адаптер
-
-echo $adapter->oldMethod();       // Теперь вызывает новый метод, используя старый интерфейс
